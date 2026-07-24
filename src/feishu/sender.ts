@@ -1,7 +1,7 @@
 import * as lark from '@larksuiteoapi/node-sdk';
-import type { PluginConfig, FeishuCard } from '../types.js';
-import { getClient } from './client.js';
-import { logger } from '../logger.js';
+import type { PluginConfig, FeishuCard } from '../types';
+import { getClient } from './client';
+import { logger } from '../logger';
 
 /**
  * 构造飞书流式输出卡片。

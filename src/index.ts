@@ -11,11 +11,11 @@
  */
 
 import * as lark from '@larksuiteoapi/node-sdk';
-import { loadConfig, validateConfig } from './config.js';
-import { createWSClient } from './feishu/client.js';
-import { MessageHandler } from './feishu/handler.js';
-import { SessionManager } from './claude/session.js';
-import { logger } from './logger.js';
+import { loadConfig, validateConfig } from './config';
+import { createWSClient } from './feishu/client';
+import { MessageHandler } from './feishu/handler';
+import { SessionManager } from './claude/session';
+import { logger } from './logger';
 import { execSync } from 'child_process';
 
 async function main(): Promise<void> {
@@ -53,6 +53,8 @@ async function main(): Promise<void> {
         logger.error('Unhandled error in message handler', { err });
       }
     },
+    // 消息已读回执：本项目不需要处理，注册空函数避免 SDK 反复打印警告
+    'im.message.message_read_v1': async () => {},
   });
 
   // 6. 启动 WebSocket 长连接（无需公网地址）

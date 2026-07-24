@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
-import type { PluginConfig } from './types.js';
+import type { PluginConfig } from './types';
 
 dotenv.config();
 

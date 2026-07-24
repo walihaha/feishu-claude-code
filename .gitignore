@@ -1,0 +1,22 @@
+# 依赖
+node_modules/
+
+# 编译产物
+dist/
+
+# 环境变量与配置（含敏感凭证）
+.env
+config.json
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.log
+
+# ts-node 缓存
+*.tsbuildinfo

@@ -1,7 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
-import type { ClaudeStreamEvent } from '../types.js';
-import { logger } from '../logger.js';
+import type { ClaudeStreamEvent } from '../types';
+import { logger } from '../logger';
 
 export type ClaudeEventCallback = (event: ClaudeStreamEvent) => void;
 

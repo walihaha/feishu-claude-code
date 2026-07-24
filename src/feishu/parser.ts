@@ -1,5 +1,5 @@
-import type { FeishuMessage, FileAttachment } from '../types.js';
-import { logger } from '../logger.js';
+import type { FeishuMessage, FileAttachment } from '../types';
+import { logger } from '../logger';
 
 /**
  * 解析飞书 im.message.receive_v1 事件，提取标准化的消息对象。

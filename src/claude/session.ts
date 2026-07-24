@@ -1,6 +1,6 @@
-import type { PluginConfig, Session } from '../types.js';
-import { ClaudeProcess } from './process.js';
-import { logger } from '../logger.js';
+import type { PluginConfig, Session } from '../types';
+import { ClaudeProcess } from './process';
+import { logger } from '../logger';
 
 interface SessionEntry {
   session: Session;

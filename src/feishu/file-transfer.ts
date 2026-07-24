@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { PluginConfig } from '../types.js';
-import { getClient } from './client.js';
-import { logger } from '../logger.js';
+import type { PluginConfig } from '../types';
+import { getClient } from './client';
+import { logger } from '../logger';
 
 /**
  * 从飞书消息中下载附件（图片/文件/音频/视频），保存到指定目录，返回本地文件路径。

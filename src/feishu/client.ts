@@ -1,6 +1,6 @@
 import * as lark from '@larksuiteoapi/node-sdk';
-import type { PluginConfig } from '../types.js';
-import { logger } from '../logger.js';
+import type { PluginConfig } from '../types';
+import { logger } from '../logger';
 
 let _client: lark.Client | null = null;
 

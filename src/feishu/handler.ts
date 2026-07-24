@@ -1,9 +1,9 @@
-import type { PluginConfig, FeishuMessage, ClaudeStreamEvent } from '../types.js';
-import { SessionManager } from '../claude/session.js';
-import { parseMessageEvent, stripBotMention } from './parser.js';
-import { buildCard, sendCard, updateCard, sendFile, sendImage } from './sender.js';
-import { downloadMessageFile, uploadAuto } from './file-transfer.js';
-import { logger } from '../logger.js';
+import type { PluginConfig, FeishuMessage, ClaudeStreamEvent } from '../types';
+import { SessionManager } from '../claude/session';
+import { parseMessageEvent, stripBotMention } from './parser';
+import { buildCard, sendCard, updateCard, sendFile, sendImage } from './sender';
+import { downloadMessageFile, uploadAuto } from './file-transfer';
+import { logger } from '../logger';
 import * as path from 'path';
 
 /**
@@ -16,6 +16,13 @@ import * as path from 'path';
 export class MessageHandler {
   private readonly config: PluginConfig;
   private readonly sessions: SessionManager;
+  /** 已处理消息 ID 缓存，防止飞书 WebSocket 重连时重复投递同一消息 */
+  private readonly processedIds = new Map<string, number>();
+  /** 缓存保留时间：10 分钟后清理，避免无限增长 */
+  private static readonly DEDUP_RETENTION_MS = 10 * 60 * 1000;
+  /** 缓存清理间隔 */
+  private static readonly DEDUP_CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
+  private lastCleanup = Date.now();
 
   constructor(config: PluginConfig, sessions: SessionManager) {
     this.config = config;
@@ -29,6 +36,15 @@ export class MessageHandler {
       logger.debug('Ignored unparseable event');
       return;
     }
+
+    // 去重：飞书 WebSocket 重连可能重复投递同一 messageId
+    const now = Date.now();
+    if (this.processedIds.has(msg.messageId)) {
+      logger.debug('Duplicate message ignored', { messageId: msg.messageId });
+      return;
+    }
+    this.processedIds.set(msg.messageId, now);
+    this.maybeCleanup(now);
 
     logger.info('Received message', {
       chatType: msg.chatType,
@@ -230,6 +246,16 @@ export class MessageHandler {
     }
 
     return true;
+  }
+
+  /** 定期清理过期的去重缓存，防止内存无限增长 */
+  private maybeCleanup(now: number): void {
+    if (now - this.lastCleanup < MessageHandler.DEDUP_CLEANUP_INTERVAL_MS) return;
+    this.lastCleanup = now;
+    const expired = now - MessageHandler.DEDUP_RETENTION_MS;
+    for (const [id, ts] of this.processedIds) {
+      if (ts < expired) this.processedIds.delete(id);
+    }
   }
 
   /**
