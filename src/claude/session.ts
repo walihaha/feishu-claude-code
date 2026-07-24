@@ -120,6 +120,12 @@ export class SessionManager {
     return setTimeout(() => {
       const entry = this.sessions.get(key);
       if (!entry) return;
+      // 正在处理消息时不超时，重新调度（避免杀死正在工作的子进程）
+      if (entry.session.processing) {
+        entry.timer = this.scheduleTimeout(key);
+        logger.info('Session busy, timeout postponed', { key });
+        return;
+      }
       logger.info('Session timed out', { key });
       entry.process.stop();
       this.sessions.delete(key);
