@@ -45,8 +45,10 @@ export class ClaudeProcess extends EventEmitter {
     if (this.running) return;
 
     const permissionArgs = this.buildPermissionArgs();
+    // 用 append 而非覆盖：--system-prompt 会替换掉 Claude Code 的全部内置提示词，
+    // 导致工具使用/行为规范丢失。这里只是在默认提示词后追加飞书场景约定。
     const systemPromptArgs = this.systemPrompt
-      ? ['--system-prompt', this.systemPrompt]
+      ? ['--append-system-prompt', this.systemPrompt]
       : [];
     const args = [
       '--input-format', 'stream-json',

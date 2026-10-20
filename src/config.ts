@@ -40,6 +40,27 @@ const DEFAULT_SYSTEM_PROMPT = `你正在通过飞书机器人与用户对话。
 用户发送的图片或文件已自动下载到工作目录，路径会在消息中告知，可直接读取处理。`;
 
 
+/**
+ * 解析 system prompt：优先 CLAUDE_SYSTEM_PROMPT_FILE（便于把提示词放进版本库里维护），
+ * 其次 CLAUDE_SYSTEM_PROMPT，最后回退到内置默认值。
+ */
+function loadSystemPrompt(): string {
+  const file = getEnvOptional('CLAUDE_SYSTEM_PROMPT_FILE');
+  if (file) {
+    try {
+      return fs.readFileSync(file, 'utf-8').trim();
+    } catch (err) {
+      console.warn(`[config] 读取 CLAUDE_SYSTEM_PROMPT_FILE 失败（${file}），回退到环境变量/默认值`);
+    }
+  }
+  return getEnvOptional('CLAUDE_SYSTEM_PROMPT', DEFAULT_SYSTEM_PROMPT) ?? DEFAULT_SYSTEM_PROMPT;
+}
+
+/** 解析额外 CLI 参数（空格分隔，例如 "--add-dir /home/lab/memory"） */
+function parseExtraArgs(raw?: string): string[] {
+  return raw ? raw.split(/\s+/).map(s => s.trim()).filter(Boolean) : [];
+}
+
 export function loadConfig(): PluginConfig {
   // 优先尝试加载 config.json
   const configFile = process.env.CONFIG_FILE ?? 'config.json';
@@ -70,7 +91,8 @@ function buildFromEnv(): PluginConfig {
       sessionTimeout: parseInt(getEnvOptional('CLAUDE_SESSION_TIMEOUT', '1800000') ?? '1800000'),
       maxSessions: parseInt(getEnvOptional('CLAUDE_MAX_SESSIONS', '50') ?? '50'),
       permissionMode: (getEnvOptional('CLAUDE_PERMISSION_MODE', 'bypassPermissions') as 'bypassPermissions' | 'acceptEdits' | 'default'),
-      systemPrompt: getEnvOptional('CLAUDE_SYSTEM_PROMPT', DEFAULT_SYSTEM_PROMPT),
+      systemPrompt: loadSystemPrompt(),
+      extraArgs: parseExtraArgs(process.env['CLAUDE_EXTRA_ARGS']),
     },
     bot: {
       requireMention: getEnvOptional('BOT_REQUIRE_MENTION', 'true') === 'true',
@@ -100,11 +122,13 @@ function mergeWithEnv(parsed: Partial<PluginConfig>): PluginConfig {
     claude: {
       bin: process.env['CLAUDE_BIN'] ?? parsed.claude?.bin ?? 'claude',
       defaultWorkdir: process.env['CLAUDE_WORKDIR'] ?? parsed.claude?.defaultWorkdir ?? process.cwd(),
-      extraArgs: parsed.claude?.extraArgs,
       sessionTimeout: parsed.claude?.sessionTimeout ?? defaults.sessionTimeout,
       maxSessions: parsed.claude?.maxSessions ?? defaults.maxSessions,
       permissionMode: (process.env['CLAUDE_PERMISSION_MODE'] as 'bypassPermissions' | 'acceptEdits' | 'default') ?? parsed.claude?.permissionMode ?? 'bypassPermissions',
-      systemPrompt: process.env['CLAUDE_SYSTEM_PROMPT'] ?? parsed.claude?.systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
+      systemPrompt: process.env['CLAUDE_SYSTEM_PROMPT_FILE'] || process.env['CLAUDE_SYSTEM_PROMPT'] ? loadSystemPrompt() : (parsed.claude?.systemPrompt ?? DEFAULT_SYSTEM_PROMPT),
+      extraArgs: parseExtraArgs(process.env['CLAUDE_EXTRA_ARGS']).length
+        ? parseExtraArgs(process.env['CLAUDE_EXTRA_ARGS'])
+        : parsed.claude?.extraArgs,
     },
     bot: {
       requireMention: parsed.bot?.requireMention ?? true,

@@ -20,3 +20,6 @@ Thumbs.db
 
 # ts-node 缓存
 *.tsbuildinfo
+
+# 环境变量备份（可能含密钥）
+.env.*
